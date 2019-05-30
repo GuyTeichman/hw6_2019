@@ -16,17 +16,27 @@ def test_jet_creation():
     assert Jet((0, 0), 0, False)
 
 
+def test_gamepiece_creation_flip():
+    assert Jet((0, 0), 0, True)
+
+
 def test_coordinates_not_tuple():
     pass
+
+
+def test_flip_orientation():
+    myjet = Jet((0, 0), 0, True)
+    truth = np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0], [0, 1, 0]]).T
+    assert np.array_equal(myjet.shape, truth)
+
 
 def test_top_left_coordinate_not_in_board():
     pass
 
+
 def test_game_piece_out_of_bounds():
     pass
 
+
 def test_game_piece_overlap():
     pass
-
-
-

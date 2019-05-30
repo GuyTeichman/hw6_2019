@@ -3,11 +3,16 @@ import matplotlib.pyplot as plt
 
 
 class GamePiece:
+    shape = np.array([])
     def __init__(self, top_left_coord, idx, flip=False):
         self.tl = top_left_coord  # tuple of row and column
         self.idx = idx
         self.flip = flip
-        return None
+        if self.flip:
+            self.change_orientation()
+
+    def change_orientation(self):
+        self.shape = self.shape.T
 
     def hit(self):
         if self.is_sturdy:
@@ -20,6 +25,8 @@ class GamePiece:
 
 
 class Submarine(GamePiece):
+    shape = np.array([1, 1, 1])
+
     def __init__(self, top_left_coord, idx, flip):
         super().__init__(top_left_coord, idx, flip)
         self.is_sturdy = False
@@ -27,6 +34,8 @@ class Submarine(GamePiece):
 
 
 class Destroyer(GamePiece):
+    shape = np.array([1, 1, 1, 1])
+
     def __init__(self, top_left_coord, idx, flip):
         super().__init__(top_left_coord, idx, flip)
         self.is_sturdy = True
@@ -34,7 +43,19 @@ class Destroyer(GamePiece):
 
 
 class Jet(GamePiece):
+    shape = np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0], [0, 1, 0]])
+
     def __init__(self, top_left_coord, idx, flip):
         super().__init__(top_left_coord, idx, flip)
         self.is_sturdy = False
         self.z = 2
+
+
+class General(GamePiece):
+    def __init__(self, top_left_coord, idx, flip):
+        super().__init__(top_left_coord, idx, flip)
+        self.is_sturdy = False
+        self.shape = np.array([1])
+
+    def kill(self):
+        pass  # trigger game over
