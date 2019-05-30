@@ -16,6 +16,11 @@ def test_jet_creation():
     assert Jet((0, 0), 0, False)
 
 
+def test_general_creation():
+    assert General((0, 0, 0), 0, False)
+    assert General((1, 1, 1), 1, True)
+
+
 def test_gamepiece_creation_flip():
     assert Jet((0, 0), 0, True)
 
