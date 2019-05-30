@@ -12,7 +12,7 @@ class GamePiece:
         assert isinstance(top_left_coord, tuple)
         assert len(top_left_coord) == 3
         if len(np.shape(self.shape)) == 1:
-            self.shape.shape =  (1, np.shape(self.shape)[0])
+            self.shape.shape = (1, np.shape(self.shape)[0])
         try:
             assert top_left_coord[2] == self.z
         except AttributeError:
