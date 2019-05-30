@@ -21,6 +21,11 @@ def test_general_creation():
     assert General((1, 1, 1), 1, True)
 
 
+def test_dunder_str_of_gamepiece():
+    piece = Destroyer((0, 0), 3, False)
+    assert piece.__str__() == "Destroyer3"
+
+
 def test_gamepiece_creation_flip():
     assert Jet((0, 0), 0, True)
 
@@ -44,4 +49,20 @@ def test_game_piece_out_of_bounds():
 
 
 def test_game_piece_overlap():
+    pass
+
+
+def test_board_creation():
+    assert Board(5, 5)
+
+
+def test_board_invalid_input():
+    pass
+
+
+def test_board_nonpositive_index():
+    pass
+
+
+def test_board_dunder_str():
     pass
