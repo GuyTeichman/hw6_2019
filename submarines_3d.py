@@ -4,15 +4,37 @@ from collections import namedtuple as tpl
 
 
 class GamePiece:
-    """A parent class from which all game pieces inherit. Includes an __init__, changing the orientation of the piece,
+    """A game_piece class from which all game pieces inherit. Includes an __init__, changing the orientation of the piece,
     what happens when the piece gets hit, what happens when the piece is destroyed. """
+    destroyed = False
 
-    def __init__(self, top_left_coord, idx, flip=False):
+    def __init__(self, top_left_coord, idx, board, flip=False):
+        assert isinstance(top_left_coord, tuple)
+        assert len(top_left_coord) == 3
+        if len(np.shape(self.shape)) == 1:
+            self.shape.shape =  (1, np.shape(self.shape)[0])
+        try:
+            assert top_left_coord[2] == self.z
+        except AttributeError:
+            self.z = top_left_coord[2]
+
         self.tl = top_left_coord  # tuple of row and column
         self.idx = idx
+        self.board = board
         self.flip = flip
         if self.flip:
             self.change_orientation()
+
+        self.pixels = []
+        try:
+            rows, cols = np.shape(self.shape)
+        except ValueError:
+            rows = np.shape(self.shape)[0]
+            cols = 1
+        for row in range(rows):
+            for col in range(cols):
+                if self.shape[row, col] == 1:
+                    self.pixels.append(Pixel(self, (row + self.tl[0], col + self.tl[1], self.tl[2])))
 
     def __str__(self):
         return f"{type(self).__name__}{self.idx}"
@@ -22,13 +44,37 @@ class GamePiece:
 
     def hit(self):
         if self.is_sturdy:
-            pass  # take damage
+            print("Signal.HIT")
+            for pxl in self.pixels:
+                if not pxl.damaged:  # if one of the pixels is not yet damaged, stop the code
+                    return None
         else:
-            self.kill()
+            for pxl in self.pixels:
+                pxl.damaged = True
+
+        self.kill()
 
     def kill(self):
+        assert not self.destroyed
+        self.destroyed = True
         print("Signal.KILL")
         pass  # kill the game piece
+
+
+class Pixel:
+    damaged = False
+
+    def __init__(self, game_piece, loc):
+        self.game_piece = game_piece
+        self.loc = loc
+
+    def is_damaged(self):
+        return self.damaged
+
+    def hit(self):
+        assert not self.damaged
+        self.damaged = True
+        self.game_piece.hit()
 
 
 class Submarine(GamePiece):
@@ -37,10 +83,6 @@ class Submarine(GamePiece):
     shape = np.array([1, 1, 1])
     is_sturdy = False
     z = 0
-    # def __init__(self, top_left_coord, idx, flip):
-    #     super().__init__(top_left_coord, idx, flip)
-    #     self.is_sturdy = False
-    #     self.z = 0
 
 
 class Destroyer(GamePiece):
@@ -49,11 +91,6 @@ which is sturdy (requires multiple hits to be destroyed). """
     shape = np.array([1, 1, 1, 1])
     is_sturdy = True
     z = 1
-
-    # def __init__(self, top_left_coord, idx, flip):
-    #     super().__init__(top_left_coord, idx, flip)
-    #     self.is_sturdy = True
-    #     self.z = 1
 
 
 class Jet(GamePiece):
@@ -66,11 +103,6 @@ class Jet(GamePiece):
     shape = np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0], [0, 1, 0]])
     is_sturdy = False
     z = 2
-    #
-    # def __init__(self, top_left_coord, idx, flip):
-    #     super().__init__(top_left_coord, idx, flip)
-    #     self.is_sturdy = False
-    #     self.z = 2
 
 
 class General(GamePiece):
@@ -78,8 +110,8 @@ class General(GamePiece):
     shape = np.array([1])
     is_sturdy = False
 
-    def __init__(self, top_left_coord, idx, flip):
-        super().__init__(top_left_coord, idx, flip)
+    def __init__(self, top_left_coord, idx, board, flip):
+        super().__init__(top_left_coord, idx, board, flip)
         self.z = self.tl[2]
 
     def kill(self):
@@ -90,7 +122,7 @@ class Board:
     available_pieces = [Submarine, Destroyer, Jet, General]
 
     def __init__(self, rows, columns):
-        self.board = np.zeros((rows, columns))
+        self.board = np.zeros((rows, columns, 3))
 
     def __str__(self):
         pass
