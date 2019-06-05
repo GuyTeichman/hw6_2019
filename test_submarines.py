@@ -47,8 +47,12 @@ def test_too_many_coordinates():
 
 def test_flip_orientation():
     myjet = Jet((0, 0, 2), 0, None, True)
-    truth = np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0], [0, 1, 0]]).T
-    assert np.array_equal(myjet.shape, truth)
+    truth_jet = np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0], [0, 1, 0]]).T
+    mysub = Submarine((0, 0, 0), 0, None, True)
+    truth_sub = np.ones((3, 1), dtype=int)
+
+    assert np.array_equal(myjet.shape, truth_jet)
+    assert np.array_equal(mysub.shape, truth_sub)
 
 
 def test_z_incompatible_with_gamepiece():
@@ -69,7 +73,13 @@ def test_game_piece_overlap():
 
 
 def test_board_creation():
-    assert Board(5, 5)
+    board_size = (10, 10)
+    board_size_2 = (8, 8)
+    number_of_pieces = {AvailablePieces.General: 1, AvailablePieces.Submarine: 4, AvailablePieces.Destroyer: 3,
+                        AvailablePieces.Jet: 2}
+    number_of_pieces_2 = {AvailablePieces.Destroyer: 4}
+    assert Board(board_size, number_of_pieces)
+    assert Board(board_size_2, number_of_pieces_2)
 
 
 def test_board_invalid_input():
@@ -82,3 +92,10 @@ def test_board_nonpositive_index():
 
 def test_board_dunder_str():
     pass
+
+
+def test_multiple_generals():
+    board_size = (10, 10)
+    number_of_pieces = {AvailablePieces.General: 2}
+    with pytest.raises(AssertionError):
+        board = Board(board_size, number_of_pieces)
