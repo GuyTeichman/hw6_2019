@@ -60,17 +60,21 @@ def test_z_incompatible_with_gamepiece():
         myjet = Jet((0, 0, 0), 0, None, False)
 
 
-def test_top_left_coordinate_not_in_board():
-    pass
+def test_board_too_small_for_piece_type():
+    board_size = (3, 3)
+    number_of_pieces = {AvailablePieces.Jet: 1}
+    with pytest.raises(AssertionError) as e:
+        myboard = Board(board_size, number_of_pieces)
+    assert "Board size is too small to accommodate" in str(e.value)
 
 
-def test_game_piece_out_of_bounds():
-    pass
 
-
-def test_game_piece_overlap():
-    pass
-
+def test_too_many_pieces_to_fit_in_board():
+    board_size = (5,5)
+    number_of_pieces = {AvailablePieces.Destroyer: 7}
+    with pytest.raises(AssertionError) as e:
+        myboard = Board(board_size, number_of_pieces)
+    assert "Too many pieces of type" in str(e.value)
 
 def test_board_creation():
     board_size = (10, 10)
@@ -87,10 +91,6 @@ def test_board_invalid_input():
 
 
 def test_board_nonpositive_index():
-    pass
-
-
-def test_board_dunder_str():
     pass
 
 

@@ -62,16 +62,17 @@ class GamePiece:
 
 
 class Pixel:
+    """A single 'pixel' of a GamePiece object. """
     damaged = False
 
     def __init__(self, game_piece: GamePiece, loc: tuple):
         self.game_piece = game_piece
         self.loc = loc
 
-    def __str__(self):
+    def __repr__(self):
         return f"{type(self.game_piece).__name__}{self.game_piece.idx}"
 
-    def __repr__(self):
+    def __str__(self):
         return f"Pixel of game piece {type(self.game_piece).__name__}{self.game_piece.idx} in coordinates {self.loc}"
 
     def is_damaged(self):
@@ -122,13 +123,16 @@ class General(GamePiece):
         self.z = self.tl[2]
 
     def kill(self):
-        pass  # trigger game over
+        for piece in self.board.pieces:
+            piece.destroyed = True
 
 
 class Board:
-    def __init__(self, size: tuple, number_of_pieces: dict):
+    def __init__(self, size: tuple, number_of_pieces: dict, player_id: int = 0):
+        assert isinstance(player_id, int)
+        self.player_id = player_id
         self.rows, self.columns = size
-        self.board = np.zeros((self.rows, self.columns, 3),dtype=np.object)
+        self.board = np.zeros((self.rows, self.columns, 3), dtype=np.object)
         self.num_pieces = number_of_pieces
         self.pieces = []
         for piece in self.num_pieces:
@@ -153,7 +157,7 @@ class Board:
                     self.board[pxl.loc[0], pxl.loc[1], pxl.loc[2]] = pxl
 
     def __str__(self):
-        return self.board.__str__()
+        return f"Deep: \n{self.board[:, :, 0]} \nSea-level: \n{self.board[:, :, 1]} \nAir: \n{self.board[:, :, 2]}"
 
     def gen_coord(self, piece_type: GamePiece, z: int, flip: bool):
         used = set()
@@ -166,7 +170,7 @@ class Board:
             piece_rows, piece_cols = piece_cols, piece_rows
         max_x = self.rows - piece_rows
         max_y = self.columns - piece_cols
-        assert max_x >= 0 and max_y >= 0, f"Board size is too small to accomodate piece {piece_type}"
+        assert max_x >= 0 and max_y >= 0, f"Board size is too small to accommodate piece {piece_type}"
         while len(used) < ((max_x + 1) * (max_y + 1)):
             x = np.random.randint(0, max_x + 1)
             y = np.random.randint(0, max_y + 1)
@@ -176,9 +180,9 @@ class Board:
             for i in range(piece_rows):
                 for j in range(piece_cols):
                     if flip:
-                        idx = piece_type.shape[j,i]
+                        idx = piece_type.shape[j, i]
                     else:
-                        idx = piece_type.shape[i,j]
+                        idx = piece_type.shape[i, j]
                     if idx == 1:
                         if self.board[i + x, j + y, z] != 0:
                             valid_placement = False
@@ -187,7 +191,40 @@ class Board:
                 return x, y
             used.add((x, y))
         raise AssertionError(f"Too many pieces of type {piece_type} for specified board size. "
-                        "Pieces cannot be placed without overlap or going out-of-bound.")
+                             "Pieces cannot be placed without overlap or going out-of-bound.")
+
+    def strike(self):
+        game_over = False
+        quit_game = False
+        coords_accepted = False
+        while not coords_accepted:
+            coords_str = input(f"Player {self.player_id}, what is the coordinate you're targeting (row,column,layer)?")
+            if coords_str == "show":
+                print(self)
+                pass
+            elif coords_str == "quit":
+                quit_game = True
+                return game_over, quit_game
+            try:
+                x, y, z = eval(coords_str)
+                assert isinstance(x, int) and isinstance(y, int) and isinstance(z, int)
+                assert x >= 0 and y >= 0 and z >= 0
+                assert x < self.rows and y < self.columns and z < 3
+                coords_accepted = True
+            except:
+                print("Invalid coordinates. ")
+        if self.board[x, y, z] == 0 or (isinstance(self.board[x, y, z], Pixel) and self.board[x, y, z].is_damaged()):
+            print("Signal.MISS")
+        else:
+            self.board[x, y, z].hit()
+            game_over = self.check_game_over()
+        return game_over, quit_game
+
+    def check_game_over(self):
+        for piece in self.pieces:
+            if not piece.destroyed:
+                return False
+        return True
 
 
 class AvailablePieces(Enum):
@@ -197,9 +234,20 @@ class AvailablePieces(Enum):
     General = General
 
 
-board_size = (10, 10)
-number_of_pieces = {AvailablePieces.Submarine: 4, AvailablePieces.Destroyer: 4,
-                    AvailablePieces.Jet: 3, AvailablePieces.General: 1}
+def start():
+    boards = [Board(board_size, number_of_game_pieces, 1), Board(board_size, number_of_game_pieces, 2)]
+    gameover = False
+    i = 0
+    while not gameover:
+        gameover, quitgame = boards[i].strike()
+        if quitgame:
+            print("Quitting game")
+            break
+        elif gameover:
+            print(f"Game over, player #{i + 1} won!")
+        i = (i + 1) % 2
 
-# def start():
-board1 = Board(board_size,number_of_pieces)
+
+board_size = (4, 4)
+number_of_game_pieces = {AvailablePieces.Submarine: 1, AvailablePieces.Destroyer: 1,
+                         AvailablePieces.Jet: 1, AvailablePieces.General: 1}
