@@ -13,8 +13,6 @@ class GamePiece:
     def __init__(self, top_left_coord: tuple, idx: int, board, flip: bool = False):
         assert isinstance(top_left_coord, tuple)
         assert len(top_left_coord) == 3
-        if len(np.shape(self.shape)) == 1:
-            self.shape.shape = (1, np.shape(self.shape)[0])
         try:
             assert top_left_coord[2] == self.z, "piece placed in invalid layer"
         except AttributeError:
