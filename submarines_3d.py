@@ -273,10 +273,10 @@ def start():
             print("Quitting game")
             break
         x, y, z = eval(inp)
-    gameover = boards[i].strike(x, y, z)
-    if gameover:
-        print(f"Game over, player #{boards[(i + 1) % 2].player_id} won!")
-    i = (i + 1) % 2
+        gameover = boards[i].strike(x, y, z)
+        if gameover:
+            print(f"Game over, player #{boards[(i + 1) % 2].player_id} won!")
+        i = (i + 1) % 2
 
 
 class AvailablePieces(Enum):
