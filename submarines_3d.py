@@ -193,38 +193,62 @@ class Board:
         raise AssertionError(f"Too many pieces of type {piece_type} for specified board size. "
                              "Pieces cannot be placed without overlap or going out-of-bound.")
 
-    def strike(self):
-        game_over = False
-        quit_game = False
-        coords_accepted = False
-        while not coords_accepted:
-            coords_str = input(f"Player {self.player_id}, what is the coordinate you're targeting (row,column,layer)?")
-            if coords_str == "show":
-                print(self)
-                pass
-            elif coords_str == "quit":
-                quit_game = True
-                return game_over, quit_game
-            try:
-                x, y, z = eval(coords_str)
-                assert isinstance(x, int) and isinstance(y, int) and isinstance(z, int)
-                assert x >= 0 and y >= 0 and z >= 0
-                assert x < self.rows and y < self.columns and z < 3
-                coords_accepted = True
-            except:
-                print("Invalid coordinates. ")
+    def strike(self, coords_str):
+        x, y, z = eval(coords_str)
         if self.board[x, y, z] == 0 or (isinstance(self.board[x, y, z], Pixel) and self.board[x, y, z].is_damaged()):
             print("Signal.MISS")
+            game_over = False
         else:
             self.board[x, y, z].hit()
             game_over = self.check_game_over()
-        return game_over, quit_game
+        return game_over
+
+    def test_coords_valid(self, coords_str):
+        try:
+            x, y, z = eval(coords_str)
+            assert isinstance(x, int) and isinstance(y, int) and isinstance(z, int)
+            assert x >= 0 and y >= 0 and z >= 0
+            assert x < self.rows and y < self.columns and z < 3
+            coords_accepted = True
+        except:
+            coords_accepted = False
+        return coords_accepted
 
     def check_game_over(self):
         for piece in self.pieces:
             if not piece.destroyed:
                 return False
+        print("Signal.END")
         return True
+
+
+def start():
+    boards = [Board(board_size, number_of_game_pieces, 1), Board(board_size, number_of_game_pieces, 2)]
+    gameover = False
+    quitgame = False
+    i = 1
+    while not gameover:
+        coords_accepted = False
+        while not coords_accepted:
+            inp = input(
+                f"Player {boards[(i + 1) % 2].player_id}, what is the coordinate you're targeting (row,column,layer)?")
+            if inp == "show":
+                print(boards[(i + 1) % 2])
+                continue
+            elif inp == "quit":
+                quitgame = True
+                break
+            elif boards[i].test_coords_valid(inp):
+                coords_accepted = True
+            else:
+                print("Invalid coordinates. ")
+        if quitgame:
+            print("Quitting game")
+            break
+        gameover = boards[i].strike(inp)
+        if gameover:
+            print(f"Game over, player #{boards[(i+1)%2].player_id} won!")
+        i = (i + 1) % 2
 
 
 class AvailablePieces(Enum):
@@ -234,20 +258,6 @@ class AvailablePieces(Enum):
     General = General
 
 
-def start():
-    boards = [Board(board_size, number_of_game_pieces, 1), Board(board_size, number_of_game_pieces, 2)]
-    gameover = False
-    i = 0
-    while not gameover:
-        gameover, quitgame = boards[i].strike()
-        if quitgame:
-            print("Quitting game")
-            break
-        elif gameover:
-            print(f"Game over, player #{i + 1} won!")
-        i = (i + 1) % 2
-
-
-board_size = (4, 4)
-number_of_game_pieces = {AvailablePieces.Submarine: 1, AvailablePieces.Destroyer: 1,
+board_size = (6, 6)
+number_of_game_pieces = {AvailablePieces.Submarine: 2, AvailablePieces.Destroyer: 2,
                          AvailablePieces.Jet: 1, AvailablePieces.General: 1}
